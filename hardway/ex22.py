@@ -53,7 +53,8 @@ print formatter %(1<2, 5>6, 7<=21/3, "magic" == "magic"), "\n"
 print "9: This is the exercise where we finally learn about the magical \nline break."
 print """We also learn
 That you can print on multiple lines
-Using triple quotes after a print statement."""
+Using triple quotes after a print statement.
+"""
 
 #ex10
 #Other string formatting
@@ -62,7 +63,7 @@ print """10: \t \\t gets you a horizontal tab.
 \\' gets you a \'.
 \\" gets you a \".
 \\b backs up one space.
-\\r backs you to the start of the line (a carraige return).
+\\r backs you to the start of the line (a carriage return).
 \\n gets you a new line.
 \\f gets you a new page.
 \\v gets you a \v vertical tab (in theory).
