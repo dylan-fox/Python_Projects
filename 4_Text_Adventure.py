@@ -31,8 +31,21 @@ dungeon = ["entrance", "trapped room", "boss room", "treasure room"]
 #print dungeon
 #----------------------------------------------------------------------------------------------------------------------------
 #A function for observing the current room; prints out the description of the room given.
-def observe(playerPosition):
-    print "You look around. You are in the", dungeon[playerPosition] + "."
+def observe(playerPosition, bossHP):
+    #print "You look around. You are in the", dungeon[playerPosition] + "."
+    if playerPosition == 0:
+        print "You find yourself in the entrance of a grim dungeon, it's damp walls dripping with mildew and blood."
+    elif playerPosition == 1:
+        print "The floors and walls show evidence of booby traps. Walk carefully, lest ye be killed."
+    elif playerPosition == 2 and bossHP > 0:
+        print "The guardian of this dungeon faces you, a mighty red dragon! If you move any closer, it might attack."
+    elif playerPosition == 2 and bossHP <= 0:
+        print "The dragon lies defeated. Beyond him, you can see the glimmer of treasure..."
+    elif playerPosition == 3:
+        print "You are surrounded by piles of gold, silver, and gems of inestimable value! You will surely die a rich man."
+    else:
+        print "You are in a computer program! Oh god!"
+
 #----------------------------------------------------------------------------------------------------------------------------
 #A function for walking. It takes the user's room as its argument.
 #It tests if the user can walk where they want to, and if so, adjusts their position.
@@ -162,7 +175,7 @@ while playerHP > 0:
     userAction = raw_input("What will you do next? You may observe, walk, fight, or quit.\n>>")
 
     if userAction == 'observe':
-        observe(playerPosition)
+        observe(playerPosition, bossHP)
 
         #The player's position is updated by the walk function.
     elif userAction == 'walk':

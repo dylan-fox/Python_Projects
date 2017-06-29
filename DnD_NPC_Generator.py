@@ -316,7 +316,8 @@ def randomSkill(quantity):
     bonusSkills = random.sample(skillRange, quantity)
     skills = []
     if 1 in bonusSkills:
-        skills += ["Athletics"]
+        skills.append("Athletics")
+        # += ["Athletics"]
     if 2 in bonusSkills:
         skills += ["Acrobatics"]
     if 3 in bonusSkills:
