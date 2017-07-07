@@ -452,6 +452,7 @@ class character:
 #---------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------
+
 """
 Robin = character()
 #With this setup, we can create characters with certain parameters. But we should
@@ -459,7 +460,6 @@ Robin = character()
 Robin.name = 'Robin'
 Robin.race = 'Halfling'
 Robin.subrace = 'Lightfoot'
-#Robin.randomSubRace()
 Robin.proficiencies = ['Stealth', 'Sleight of Hand', 'Arcana']
 print Robin
 Robin.Str = Robin.roll4d6()
