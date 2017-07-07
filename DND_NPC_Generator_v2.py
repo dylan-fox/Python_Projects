@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#A program to generate random 5th edition NPCs.
-import random
+"""
+A program to generate random 5th edition NPCs.
 
-#First, we have the character class. Every character will be an instantiation of this class.
-#Therefore, the class must remain a blank slate, but with functions to imbue objects with qualities.
+The goal is to be able to create a batch of random characters.
+
+First, we have the character class. Every character will be an instantiation of this class.
+Therefore, the class must remain a blank slate, but with functions to imbue objects with qualities.
+"""
+import random
 
 class character:
 
