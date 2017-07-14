@@ -46,22 +46,26 @@ class character:
 #    def __init__(self, race = None, background = None, charClass = None, gender = None):
     def __init__(self, **charInfo):
         """Set initial values for the character."""
+
         #Race
         if charInfo.setdefault('race', None) == None:
             self.randomRace()
         else:
             self.race = charInfo['race']
             self.randomSubRace()
+
         #Background
         if charInfo.setdefault('background', None) == None:
             self.randomBackground()
         else:
             self.background = charInfo['background']
+
         #Class
         if charInfo.setdefault('charClass', None) == None:
             self.randomClass()
         else:
             self.charClass = charInfo['charClass']
+
         #Gender
         if charInfo.setdefault('gender', None) == None:
             gender = random.randint(1,2)
@@ -71,28 +75,44 @@ class character:
                 self.gender = 'female'
         else:
             self.gender = charInfo['gender']
+
+        #Name
         self.randomName(self.race, self.gender)
-        self.age = 0
+
+        #Proficiencies
         self.proficiencies = []
-        self.Str = 0
-        self.Dex = 0
-        self.Con = 0
-        self.Int = 0
-        self.Wis = 0
-        self.Cha = 0
+        self.setProficiencies()
+        #This will reroll skills until no duplicates are detected.
+        while len(self.proficiencies) > len(set(self.proficiencies)):
+            self.proficiencies = []
+            #print 'Duplicates found, trying again.'
+            self.setProficiencies()
+            #print 'New proficiencies:', sorted(self.proficiencies)
+
+        #Attributes
+        self.attributes = {
+            'Str': 0,
+            'Dex': 0,
+            'Con': 0,
+            'Int': 0,
+            'Wis': 0,
+            'Cha': 0
+        }
+        self.setAttributes()
+
+        #Level
         self.level = 1
-        self.profiency = 2
+
+        #Proficiency Bonus
+        self.profBonus = 2
+
+        #Adjectives
+        self.adjectives = []
+        self.setAdjectives()
 
 #---------------------------------------------------------------------------------------------------------------------
-    def roll4d6(self):
-        """Generates an ability score by rolling 4d6 and dropping the lowest."""
-        roll1 = random.randint(1,6)
-        roll2 = random.randint(1,6)
-        roll3 = random.randint(1,6)
-        roll4 = random.randint(1,6)
-        sortedRolls = sorted([roll1, roll2, roll3, roll4])
-        return sortedRolls[1] + sortedRolls[2] + sortedRolls[3]
 #---------------------------------------------------------------------------------------------------------------------
+#Key Character Functions
     def randomRace(self):
         """Assigns the character a random race and subrace."""
         #Generate a random number between 1 and 9, then reassign race based on that number.
@@ -287,6 +307,399 @@ class character:
         elif charClass == 12:
             self.charClass = "Wizard"
 #---------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------
+#Attribute Functions
+    def roll4d6(self):
+        """Generates an ability score by rolling 4d6 and dropping the lowest."""
+        roll1 = random.randint(1,6)
+        roll2 = random.randint(1,6)
+        roll3 = random.randint(1,6)
+        roll4 = random.randint(1,6)
+        sortedRolls = sorted([roll1, roll2, roll3, roll4])
+        return sortedRolls[1] + sortedRolls[2] + sortedRolls[3]
+#---------------------------------------------------------------------------------------------------------------------
+    def setAttributes(self):
+        """Sets attributes based on class and race."""
+        #First, roll 4d6 and sort from lowest to highest.
+        scores = sorted([self.roll4d6(), self.roll4d6(), self.roll4d6(), self.roll4d6(), self.roll4d6(), self.roll4d6()])
+        #print sortedScores
+
+        #Set a random number for later use.
+        rand = random.randint(1,6)
+
+        #Next, based on class, assign the highest two scores to a primary and secondary attribute, then the rest at random.
+        primary = scores.pop()
+        secondary = scores.pop()
+        random.shuffle(scores)
+
+        if self.charClass == 'Barbarian':
+            self.attributes['Str'] = primary
+            self.attributes['Con'] = secondary
+            for att, score in self.attributes.iteritems():
+                if score == 0:
+                    self.attributes[att] = scores.pop()
+
+        elif self.charClass == 'Bard':
+            self.attributes['Cha'] = primary
+            if rand <=3:
+                self.attributes['Str'] = secondary
+            else:
+                self.attributes['Dex'] = secondary
+            for att, score in self.attributes.iteritems():
+                if score == 0:
+                    self.attributes[att] = scores.pop()
+
+        elif self.charClass == 'Cleric':
+            self.attributes['Wis'] = primary
+            if rand <=3:
+                self.attributes['Str'] = secondary
+            else:
+                self.attributes['Dex'] = secondary
+            for att, score in self.attributes.iteritems():
+                if score == 0:
+                    self.attributes[att] = scores.pop()
+
+        elif self.charClass == 'Druid':
+            self.attributes['Wis'] = primary
+            if rand <=3:
+                self.attributes['Str'] = secondary
+            else:
+                self.attributes['Dex'] = secondary
+            for att, score in self.attributes.iteritems():
+                if score == 0:
+                    self.attributes[att] = scores.pop()
+
+        elif self.charClass == 'Fighter':
+            if rand <=3:
+                self.attributes['Str'] = primary
+            else:
+                self.attributes['Dex'] = primary
+            self.attributes['Con'] = secondary
+            for att, score in self.attributes.iteritems():
+                if score == 0:
+                    self.attributes[att] = scores.pop()
+
+        elif self.charClass == 'Monk':
+            if rand <=3:
+                self.attributes['Str'] = primary
+            else:
+                self.attributes['Dex'] = primary
+            self.attributes['Wis'] = secondary
+            for att, score in self.attributes.iteritems():
+                if score == 0:
+                    self.attributes[att] = scores.pop()
+
+        elif self.charClass == 'Paladin':
+            if rand <=3:
+                self.attributes['Str'] = primary
+            else:
+                self.attributes['Dex'] = primary
+            self.attributes['Cha'] = secondary
+            for att, score in self.attributes.iteritems():
+                if score == 0:
+                    self.attributes[att] = scores.pop()
+
+        elif self.charClass == 'Ranger':
+            #Primary: charisma, secondary: Str or Dex
+            if rand <=3:
+                self.attributes['Str'] = primary
+            else:
+                self.attributes['Dex'] = primary
+            self.attributes['Wis'] = secondary
+            for att, score in self.attributes.iteritems():
+                if score == 0:
+                    self.attributes[att] = scores.pop()
+
+        elif self.charClass == 'Rogue':
+            self.attributes['Dex'] = primary
+            if rand <=3:
+                self.attributes['Int'] = secondary
+            else:
+                self.attributes['Cha'] = secondary
+            for att, score in self.attributes.iteritems():
+                if score == 0:
+                    self.attributes[att] = scores.pop()
+
+        elif self.charClass == 'Sorcerer':
+            self.attributes['Cha'] = primary
+            if rand <=3:
+                self.attributes['Dex'] = secondary
+            else:
+                self.attributes['Con'] = secondary
+            for att, score in self.attributes.iteritems():
+                if score == 0:
+                    self.attributes[att] = scores.pop()
+
+        elif self.charClass == 'Warlock':
+            self.attributes['Cha'] = primary
+            if rand <=3:
+                self.attributes['Dex'] = secondary
+            else:
+                self.attributes['Con'] = secondary
+            for att, score in self.attributes.iteritems():
+                if score == 0:
+                    self.attributes[att] = scores.pop()
+
+        elif self.charClass == 'Wizard':
+            self.attributes['Int'] = primary
+            if rand <=3:
+                self.attributes['Dex'] = secondary
+            else:
+                self.attributes['Con'] = secondary
+            for att, score in self.attributes.iteritems():
+                if score == 0:
+                    self.attributes[att] = scores.pop()
+
+
+        #Next, assign bonuses based on race and subrace.
+        if self.race == "Dragonborn":
+            self.attributes['Str'] +=2
+            self.attributes['Cha'] +=1
+        elif self.race == "Dwarf":
+            if self.subrace == "Hill":
+                self.attributes['Wis'] +=1
+            elif self.subrace == "Mountain":
+                self.attributes['Str'] +=2
+        elif self.race == "Elf":
+            self.attributes['Dex'] +=2
+            if self.subrace == "High":
+                self.attributes['Int'] +=1
+            elif self.subrace == "Wood":
+                self.attributes['Wis'] +=1
+            elif self.subrace == "Drow":
+                self.attributes['Cha'] +=1
+        elif self.race == "Gnome":
+            self.attributes['Int'] +=2
+            if self.subrace == "Forest":
+                self.attributes['Dex'] +=1
+            elif self.subrace == "Rock":
+                self.attributes['Con'] +=1
+        elif self.race == "Half-Elf":
+            self.attributes['Cha'] +=2
+            #print "Stats before boost: %i %i %i %i %i %i" %(Str, Dex, Con, Int, Wis, Cha)
+            raceBoost = random.sample([1, 2, 3, 4, 5], 2)
+            if raceBoost[0] == 1 or raceBoost[1] == 1:
+                self.attributes['Str'] +=1
+                #print "Boosted Str"
+            if raceBoost[0] == 2 or raceBoost[1] == 2:
+                self.attributes['Dex'] +=1
+               #print "Boosted Dex"
+            if raceBoost[0] == 3 or raceBoost[1] == 3:
+                self.attributes['Con'] +=1
+                #print "Boosted Con"
+            if raceBoost[0] == 4 or raceBoost[1] == 4:
+                self.attributes['Int'] +=1
+                #print "Boosted Int"
+            if raceBoost[0] == 5 or raceBoost[1] == 5:
+                self.attributes['Wis'] +=1
+                #print "Boosted Wis"
+            #print "Stats after boost: %i %i %i %i %i %i" %(Str, Dex, Con, Int, Wis, Cha)
+
+        elif self.race == "Half-Orc":
+            self.attributes['Str'] +=2
+            self.attributes['Con'] +=1
+
+        elif self.race == "Halfling":
+            self.attributes['Dex'] +=2
+            if self.subrace == "Lightfoot":
+                self.attributes['Cha'] +=1
+            elif self.subrace == "Stout":
+                self.attributes['Con'] +=1
+
+        elif self.race == "Human":
+            raceBoost = random.sample([1, 2, 3, 4, 5, 6], 2)
+            if raceBoost[0] == 1 or raceBoost[1] == 1:
+                self.attributes['Str'] +=1
+                #print "Boosted Str"
+            if raceBoost[0] == 2 or raceBoost[1] == 2:
+                self.attributes['Dex'] +=1
+                #print "Boosted Dex"
+            if raceBoost[0] == 3 or raceBoost[1] == 3:
+                self.attributes['Con'] +=1
+                #print "Boosted Con"
+            if raceBoost[0] == 4 or raceBoost[1] == 4:
+                self.attributes['Int'] +=1
+                #print "Boosted Int"
+            if raceBoost[0] == 5 or raceBoost[1] == 5:
+                self.attributes['Wis'] +=1
+               #print "Boosted Wis"
+            if raceBoost[0] == 6 or raceBoost[1] == 6:
+                self.attributes['Cha'] +=1
+                #print "Boosted Cha"
+
+        elif self.race == "Tiefling":
+            self.attributes['Int'] +=1
+            self.attributes['Cha'] +=2
+#---------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------
+#Proficiency Functions
+    def randomProficiencies(self, quantity):
+        """Returns a given number of random skills."""
+        skillRange = range(1,19)
+        bonusSkills = random.sample(skillRange, quantity)
+        skills = []
+        if 1 in bonusSkills:
+            skills.append("Athletics")
+            # += ["Athletics"]
+        if 2 in bonusSkills:
+            skills += ["Acrobatics"]
+        if 3 in bonusSkills:
+            skills += ["Sleight of Hand"]
+        if 4 in bonusSkills:
+            skills += ["Stealth"]
+        if 5 in bonusSkills:
+            skills += ["Arcana"]
+        if 6 in bonusSkills:
+            skills += ["History"]
+        if 7 in bonusSkills:
+            skills += ["Investigation"]
+        if 8 in bonusSkills:
+            skills += ["Nature"]
+        if 9 in bonusSkills:
+            skills += ["Religion"]
+        if 10 in bonusSkills:
+            skills += ["Animal Handling"]
+        if 11 in bonusSkills:
+            skills += ["Insight"]
+        if 12 in bonusSkills:
+            skills += ["Medicine"]
+        if 13 in bonusSkills:
+            skills += ["Perception"]
+        if 14 in bonusSkills:
+            skills += ["Survival"]
+        if 15 in bonusSkills:
+            skills += ["Deception"]
+        if 16 in bonusSkills:
+            skills += ["Intimidation"]
+        if 17 in bonusSkills:
+            skills += ["Performance"]
+        if 18 in bonusSkills:
+            skills += ["Persuasion"]
+        return skills
+#---------------------------------------------------------------------------------------------------------------------
+    def setProficiencies(self):
+        """Assign proficiencies based on race, background, and class."""
+
+        #races
+        if self.race == "Dwarf":
+            self.proficiencies +=["Artisan's tools"]
+        elif self.race == "Half-Orc":
+            self.proficiencies +=["Intimidate"]
+        elif self.race == "Elf":
+            self.proficiencies += ["Perception"]
+        elif self.race == "Gnome" and self.subrace == "Rock":
+            self.proficiencies += ["Tinker's tools"]
+        elif self.race == "Half-Elf":
+            self.proficiencies += self.randomProficiencies(2)
+        elif self.race == "Half-Orc":
+            self.proficiencies += ["Intimidate"]
+        elif self.race == "Human":
+            self.proficiencies += self.randomProficiencies(1)
+
+        #backgrounds
+        if self.background == "Acolyte":
+            self.proficiencies +=["Insight", "Religion"]
+        if self.background == "Charlatan":
+            self.proficiencies +=["Deception", "Sleight of Hand", "Disguise Kit", "Forgery Kit"]
+        if self.background == "Criminal":
+            self.proficiencies +=["Deception", "Stealth", "Gaming Set", "Thieves' Tools"]
+        if self.background == "Entertainer":
+            self.proficiencies +=["Acrobatics", "Performance", "Musical Instrument", "Disguise Kit"]
+        if self.background == "Folk Hero":
+            self.proficiencies +=["Animal Handling", "Survival", "Artisan's Tools", "Land Vehicles"]
+        if self.background == "Guild Artisan":
+            self.proficiencies +=["Insight", "Persuasion", "Artisan's Tools"]
+        if self.background == "Hermit":
+            self.proficiencies +=["Medicine", "Religion", "Herbalism Kit"]
+        if self.background == "Noble":
+            self.proficiencies +=["History", "Persuasion", "Gaming Set"]
+        if self.background == "Outlander":
+            self.proficiencies +=["Athletics", "Survival", "Musical Instrument"]
+        if self.background == "Sage":
+            self.proficiencies +=["Arcana", "History"]
+        if self.background == "Sailor":
+            self.proficiencies +=["Athletics", "Perception", "Navigator's Tools", "Water Vehicles"]
+        if self.background == "Soldier":
+            self.proficiencies +=["Athletics", "Intimidation", "Gaming Set", "Land Vehicles"]
+        if self.background == "Urchin":
+            self.proficiencies +=["Sleight of Hand", "Stealth", "Disguise Kit", "Thieves' Tools"]
+
+        #classes
+        if self.charClass == "Barbarian":
+            newProficiencies = random.sample(["Animal Handling", "Athletics", "Intimidation", "Nature", "Perception", "Survival"], 2)
+            self.proficiencies +=[newProficiencies[0], newProficiencies[1]]
+        elif self.charClass == "Bard":
+            self.proficiencies += self.randomProficiencies(3)
+        elif self.charClass == "Cleric":
+            newProficiencies = random.sample(["History", "Insight", "Medicine", "Persuasion", "Religion"], 2)
+            self.proficiencies +=[newProficiencies[0], newProficiencies[1]]
+        elif self.charClass == "Druid":
+            newProficiencies = random.sample(["Arcana", "Animal Handling", "Insight", "Medicine", "Nature", "Perception", "Religion", "Survival"], 2)
+            self.proficiencies +=[newProficiencies[0], newProficiencies[1]]
+        elif self.charClass == "Fighter":
+            newProficiencies = random.sample(["Acrobatics", "Animal Handling", "Athletics", "History", "Insight", "Intimidation", "Perception", "Survival"], 2)
+            self.proficiencies +=[newProficiencies[0], newProficiencies[1]]
+        elif self.charClass == "Monk":
+            newProficiencies = random.sample(["Acrobatics", "Athletics", "History", "Insight", "Religion", "Stealth"], 2)
+            self.proficiencies +=[newProficiencies[0], newProficiencies[1]]
+        elif self.charClass == "Paladin":
+            newProficiencies = random.sample(["Athletics", "Insight", "Intimidation", "Medicine", "Persuasion", "Religion"], 2)
+            self.proficiencies +=[newProficiencies[0], newProficiencies[1]]
+        elif self.charClass == "Ranger":
+            newProficiencies = random.sample(["Animal Handling", "Athletics", "Insight", "Investigation", "Nature", "Perception", "Stealth", "Survival"], 3)
+            self.proficiencies +=[newProficiencies[0], newProficiencies[1], newProficiencies[2]]
+        elif self.charClass == "Rogue":
+            newProficiencies = random.sample(["Acrobatics", "Athletics", "Deception", "Insight", "Intimidation", "Investigation", "Perception", "Performance", "Persuasion", "Sleight of Hand", "Stealth"], 4)
+            self.proficiencies +=[newProficiencies[0], newProficiencies[1], newProficiencies[2], newProficiencies[3]]
+        elif self.charClass == "Sorcerer":
+            newProficiencies = random.sample(["Arcana", "Deception", "Insight", "Intimidation", "Persuasion", "Religion"], 2)
+            self.proficiencies +=[newProficiencies[0], newProficiencies[1]]
+        elif self.charClass == "Warlock":
+            newProficiencies = random.sample(["Arcana", "Deception", "History", "Intimidation", "Investigation", "Nature", "Religion"], 2)
+            self.proficiencies +=[newProficiencies[0], newProficiencies[1]]
+        elif self.charClass == "Wizard":
+            newProficiencies = random.sample(["Arcana", "History", "Insight", "Investigation", "Medicine", "Religion"], 2)
+            self.proficiencies +=[newProficiencies[0], newProficiencies[1]]
+
+        """This way replaces duplicate proficiencies with random ones. It may
+        be slightly faster, but it also distributes proficiencies that characters
+        have no ways of getting.
+
+        #Replace duplicates with random proficiencies
+        #While loop checks that the length of the unique skill list = length of skill list
+        #print len(self.proficiencies), len(set(self.proficiencies))
+        while len(self.proficiencies) > len(set(self.proficiencies)):
+            #print 'Proficiencies:', self.proficiencies
+            enProf = list(enumerate(self.proficiencies))
+            #print 'enProf:', enProf
+            duplicate = False
+            for testIndex, tested in enProf:
+                #print 'test:', testIndex, tested
+                #compare x against other elements of proficiencies
+                for comparisonIndex, comparison in enProf:
+                    #print 'comparison:', comparisonIndex, comparison
+                    if tested == comparison and testIndex != comparisonIndex:
+                        #print 'Duplicate found'
+                        duplicate = True
+                        duplicateIndex = testIndex
+                        break
+                if duplicate == True:
+                    break
+
+            #If a duplicate was detected, change the tested proficiency
+            if duplicate == True:
+                newProf = self.randomProficiencies(1)
+                self.proficiencies[duplicateIndex] = newProf[0]
+                #print 'replaced %s with %s' %(tested, self.proficiencies[duplicateIndex])
+                #print 'Proficiencies:', self.proficiencies
+        """
+
+        #sort list
+        self.proficiencies = sorted(self.proficiencies)
+
+#---------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------
+#Descriptor Functions
     def randomName(self, race, gender):
         """Sets name based on race and gender."""
         if race == 'Dwarf':
@@ -441,12 +854,41 @@ class character:
         else:
             self.name = 'SampleName'
 #---------------------------------------------------------------------------------------------------------------------
+    def setAdjectives(self):
+        """Generates a list of 3 random adjectives to describe the character."""
+        #Set a list of adjectives.
+        allAdjectives ="""absurd, adorable, aged, amazing, ancient, animated, annoying, arrogant, attractive, awesome, awful, awkward, bashful, beautiful, believable, big, bitter, boisterous, bold, boring, brave, bright, brilliant, brutal, busy, calm, careful, caring, casual, charming, cheerful, cheesy, chubby, clean, clear, clever, clueless, clumsy, cold, colorful, comical, conceited, confused, confusing, cool, corrupt, cosmopolitan, courageous, cowardly, cranky, crazy, creative, creepy, crisp, cruel, cuddly, curvy, cute, dainty, daring, dark, dashing, deadly, delicate, delightful, demanding, depressing, desperate, devious, dignified, dirty, disgusting, distinguished, disturbing, dramatic, dreamy, dull, dumb, dysfunctional, earthy, eccentric, edgy, elderly, elitist, emotional, enchanting, energetic, enormous, entertaining, excitable, explosive, exquisite, fabulous, famous, fancy, fashionable, fast, fat, fearful, feminine, filthy, flaky, flamboyant, flat, fragrant, frail, frazzled, fresh, friendly, frightening, funky, funny, furious, furry, fuzzy, gentle, gigantic, glamorous, glitzy, gloomy, glorious, goofy, gorgeous, graceful, grueling, gruesome, grungy, hairy, handsome, happy, hardworking, harsh, haunting, healthy, heavy, helpful, hilarious, honest, honorable, horrifying, hostile, hot, humorous, idiotic, industrious, influential, innocnet, insane, intense, irresistable, irrirtating, jolly, kind, lazy, legendary, little, lively, loud, lovable, lucky, lumpy, luscious, manly, masculine, mean, meek, melodramatic, mesmerizing, messy, mischievous, miserable, misunderstood, modern, mysterious, mystical, naive, nasty, neat, naughty, nerdy, nice, noisy, normal, nutty, obnoxious, obscene, odd, offensive, old, orderly, ordinary, outrageous, pale, pathetic, patriotic, peaceful, perverse, philosophical, phony, plain, playful, pleasant, polite, poor, popular, powerful, practical, pretty, primitive, principled, profound, proud, puffy, pure, quick, quiet, radical, realistic, refined, relaxed, repulsive, respectable, responsible, revolutionary, rich, ridiculous, risky, rough, round, sad, saintly, sappy, scary, secretive, selfish, senseless, sensitive, sensual, serious, sexy, shaggy, shallow, sharp, short, shy, silent, silly, simple, skillful, skinny, slender, slimy, slippery, sloppy, slow, sluggish, small, smart, smooth, snappy, sneaky, soft, sophisticated, sour, speedy, spiritual, spooky, spunky, sticky, stinky, strange, strong, stunning, stupid, sultry, surprising, sweet, swift, talented, tall, tame, temperamental, tender, terrible, terrific, thick, thin, thoughtful, tiny, timeless, tormented, tough, trashy, trustworthy, twisted, ugly, unbelievable, unforgettable, unhappy, unhealthy, unscrupulous, unusual, untamed, vain, violent, virtuous, visionary, warm, weak, weird, whimsical, wicked, wild, wired, witty, woebegone, wonderful, worldly, young, zany,
+        """.split(', ')
+        #Sample from them at random.
+        self.adjectives += random.sample(allAdjectives, 3)
+        f = self.adjectives[0][0]
+        if f == 'a' or f == 'e' or f == 'i' or f == 'o' or f == 'u':
+            self.shouldAn = "n"
+        else:
+            self.shouldAn = ""
+
+#    def setAppearance(self):
+#---------------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------
     def __str__(self):
         """Returns the description of the character."""
+        #Core descriptors (name, gender, level, race, background, class)
+
+        #check if subrace exists
         if self.subrace == None:
-            return "%s is a %s level %d %s %s %s. \nProficiencies: %s\n" %(self.name, self.gender, self.level, self.race, self.background, self.charClass, ", ".join(sorted(self.proficiencies)))
+            subPrint = " "
         else:
-            return "%s is a %s level %d %s %s %s %s. \nProficiencies: %s\n" %(self.name, self.gender, self.level, self.subrace, self.race, self.background, self.charClass, ", ".join(sorted(self.proficiencies)))
+            subPrint = " " + self.subrace + " "
+
+        coreString = "%s is a%s %s, %s, %s %s%s%s %s %s." %(self.name, self.shouldAn, self.adjectives[0], self.adjectives[1], self.adjectives[2], self.gender, subPrint, self.race, self.background, self.charClass)
+
+        #Attributes
+        attributesString = "Str %i, Dex %i, Con %i, Int %i, Wis %i, Cha %i" %(self.attributes['Str'], self.attributes['Dex'], self.attributes['Con'], self.attributes['Int'], self.attributes['Wis'], self.attributes['Cha'])
+
+        #Proficiencies
+        proficienciesString = "Proficiencies: %s" %(", ".join(sorted(self.proficiencies)))
+
+        return coreString + "\n" + attributesString + "\n" + proficienciesString + "\n"
 
 #---------------------------------------------------------------------------------------------------------------------
 #---------------------------------------------------------------------------------------------------------------------
@@ -468,9 +910,9 @@ print Robin.Dex
 print ""
 """
 
-Alpha = character(race = 'Halfling', charClass = 'Rogue')
-Beta = {'race':'Human', 'background':'Charlatan', 'charClass':'Bard', 'gender':'female'}
-Beta = character(**Beta)
+Alpha = character(race = 'Halfling', charClass = 'Barbarian')
+BetaDic = {'race':'Human', 'background':'Charlatan', 'charClass':'Bard', 'gender':'female'}
+Beta = character(**BetaDic)
 Gamma = character()
 Delta = character()
 Epsilon = character()
