@@ -924,12 +924,6 @@ print Gamma
 print Delta
 print Epsilon
 """
-print character(race = "Half-Elf", charClass = "Barbarian", background="Sailor")
-
-print character(race = "Half-Elf", charClass = "Barbarian", background="Sailor")
-
-print character(race = "Half-Elf", charClass = "Barbarian", background="Sailor")
-
-print character(race = "Half-Elf", charClass = "Barbarian", background="Sailor")
-
-print character(race = "Half-Elf", charClass = "Barbarian", background="Sailor")
+for x in range (1, 5):
+#    print character(race = "Half-Elf", charClass = "Barbarian", background="Sailor", gender = "Female")
+    print character()
